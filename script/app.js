@@ -12,19 +12,26 @@ const astraData = {
 // location
 function getLocation() {
     if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(showLocation, function(error) {
-            console.log("Location error:", error);
-            alert("could not get your location: " + error.message);
+        navigator.geolocation.getCurrentPosition(
+            showLocation, 
+            function(error) {
+                console.log("Location error:", error);
+                alert(
+                    "could not get your location: " + 
+                    error.message +
+                    " (code " + error.code + ")"
+                );
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
         }
         );
     } else {
         alert("geolocation is not supported");
     }
 }
-
-document
-    .getElementById("locationButton")
-    .addEventListener("click", getLocation);
 
 
 function showLocation(position) {
