@@ -22,12 +22,9 @@ body {
 /* Main Astra shell */
 .app {
     width: 100%;
-    max-width: 430px;
-    min-height: 100vh;
-
-    margin: 0 auto;
-
+    min-height: 100dvh;
     padding: 24px 18px;
+    margin: 0;
 }
 
 

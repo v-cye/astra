@@ -28,16 +28,14 @@
 .bottom-nav {
     position: fixed;
 
-    left: 50%;
+    left: 0;
     bottom: 0;
-    transform: translateX(-50%);
+    transform: none;
 
     display: flex;
-    align-items: center;
-    justify-content: space-around;
 
-    width: calc(100% - 36px);
-    max-width: 394px;
+    width: 0;
+    max-width: none;
     height: 76px;
 
     box-sizing: border-box;

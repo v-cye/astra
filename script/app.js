@@ -12,12 +12,20 @@ const astraData = {
 // location
 function getLocation() {
     if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(showLocation);
+        navigator.geolocation.getCurrentPosition(showLocation, function(error) {
+            console.log("Location error:", error);
+            alert("could not get your location: " + error.message);
+        }
+        );
     } else {
-        document.getElementById("location").innerHTML = 
-            "Geolocation is not supported.";
+        alert("geolocation is not supported");
     }
 }
+
+document
+    .getElementById("locationButton")
+    .addEventListener("click", getLocation);
+
 
 function showLocation(position) {
     const latitude = position.coords.latitude;
