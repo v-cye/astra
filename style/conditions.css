@@ -1,0 +1,204 @@
+/* Overiview */
+.page-header {
+    margin-top: 0px;
+}
+
+.page-header h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 400;
+}
+
+.page-header p {
+    margin-top: 6px;
+    color: #7f8792;
+    font-size: 13px;
+}
+
+
+.condition-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin-top: 24px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #202a36;
+}
+
+.condition-tab {
+    border: none;
+    background: transparent;
+    color: #7f8792;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.condition-tab.active {
+    color: white;
+    border-bottom: 1px solid white;
+}
+
+.conditions-score-card {
+    margin-top: 20px;
+    padding: 22px;
+    background: #0b1119;
+    border: 1px solid #202a36;
+    border-radius: 14px;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.conditions-score {
+    margin-top: 12px;
+    font-size: 42px;
+}
+
+.score-label {
+    margin-top: 4px;
+    color: #8fd45f;
+    font-size: 13px;
+}
+
+.section-title {
+    margin-top: 28px;
+    font-size: 17px;
+    font-weight: 400;
+}
+
+.condition-list {
+    background: #0b1119;
+    border: 1px solid #202a36;
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.condition-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 16px;
+    border-bottom: 1px solid #202a36;
+    font-size: 14px;
+}
+
+.condition-row:last-child {
+    border-bottom: none;
+}
+
+.condition-row span:last-child {
+    color: #a7adb7;
+}
+
+.condition-tab-content {
+    display: none;
+}
+
+.condition-tab-content.active {
+    display: block;
+}
+
+
+
+/* Weather */
+.weather-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.weather-card {
+    min-height: 105px;
+    padding: 16px;
+    background: #0b1119;
+    border: 1px solid #202a36;
+    border-radius: 14px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.weather-card.wide {
+    grid-column: 1 / -1;
+}
+
+.hourly-weather {
+    display: flex;
+    gap: 10px;
+
+    overflow-x: auto;
+    padding: 4px 0 12px;
+
+    scrollbar-width: none;
+}
+
+.hourly-weather::-webkit-scrollbar {
+    display: none;
+}
+
+.hour-card {
+    min-width: 78px;
+    height: 115px;
+    padding: 12px 8px;
+
+    background: #0b1119;
+    border: 1px solid #202a36;
+    border-radius: 14px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+
+    flex-shrink: 0;
+}
+
+.hour-time {
+    color: #a7adb7;
+    font-size: 12px;
+}
+
+.hour-temp {
+    font-size: 22px;
+}
+
+.hour-cloud {
+    color: #8fa0b5;
+    font-size: 12px;
+}
+
+
+
+/* Astronomy */
+.astronomy-moon-card {
+    margin-top: 20px;
+    padding: 18px;
+
+    background: #0b1119;
+    border: 1px solid #202a36;
+    border-radius: 14px;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 20px;
+}
+
+.darkness-card {
+    margin-top: 18px;
+    padding: 18px;
+
+    background: #0b1119;
+    border: 1px solid #202a36;
+    border-radius: 14px;
+}
+
+.darkness-range {
+    margin-top: 10px;
+    font-size: 21px;
+}
+
+.darkness-duration {
+    margin-top: 5px;
+    color: #8fa0b5;
+    font-size: 13px;
+}

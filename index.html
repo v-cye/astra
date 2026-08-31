@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>Astra</title>
+        <link rel="stylesheet" href="style/base.css">
+        <link rel="stylesheet" href="style/conditions.css">
+        <link rel="stylesheet" href="style/home.css">
+        <link rel="stylesheet" href="style/navigation.css">
+        <link rel="stylesheet" href="style/explore.css">
+        <link rel="stylesheet" href="style/skymap.css">
+        <link rel="stylesheet" href="style/saved.css">
+    </head>
+
+
+    <body>
+
+        <div class="app">
+
+            <header class="top-bar">
+                <button class="menu-button">☰</button>
+                <h1 class="logo">astra</h1>
+                <button class="notification-button">♢</button>
+            </header>
+        
+
+
+            <main>
+                <section id="homePage" class="page active">
+                    <section class="welcome">
+                        <h2>Good afternoon,<br>Stargazer ✧</h2>
+                    </section>
+
+                    <button id="locationButton" onclick="getLocation()">
+                        Use My Location
+                    </button>
+
+                    <div id="location"></div>
+
+
+
+                    <section class="overview">
+                        <h3>Tonight's Overview</h3>
+
+                        <div class="overview-grid">
+                            <div class="overview-card">
+                                <span class="card-label">Observing Score</span>
+                                <span class="card-value" id="observingQuality">--</span>
+                            </div>
+
+                            <div class="overview-card">
+                                <span class="card-label">Cloud Cover</span>
+                                <span class="card-value" id="cloudCover">--</span>
+                            </div>
+
+                            <div class="overview-card">
+                                <span class="card-label">Darkness Begins</span>
+                                <span class="card-value" id="darkness">--</span>
+                            </div>
+
+                            <div class="overview-card">
+                                <span class="card-label">Moon Phase</span>
+                                <span class="card-value moon-value" id="moonPhase">--</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    
+                    <section class="best-time-card">
+                        <div class="best-time-label">✦ Best time to observe</div>
+
+                        <div class="best-time">
+                            <span id="bestWindow">--</span>
+                        </div>
+
+                        <div class="best-time-score">
+                            Window quality: 
+                            <span id="bestWindowScore">--</span>
+                        </div>
+                    </section>
+                </section>
+                
+
+                <section id="conditionsPage" class="page">
+                    
+                    <div class="page-header">
+                        <h2>Conditions</h2>
+                        <p>Tonight's observing conditions</p>
+                    </div>
+
+                    <div class="condition-tabs">
+                        <button class="condition-tab active" onclick="showConditionTab('overviewTab', this)">
+                            Overview
+                        </button>
+
+                        <button class="condition-tab" onclick="showConditionTab('weatherTab', this)">
+                            Weather
+                        </button>
+
+                        <button class="condition-tab" onclick="showConditionTab('astronomyTab', this)">
+                            Astronomy
+                        </button>
+                    </div>
+
+
+                    <div id="overviewTab" class="condition-tab-content active">
+                        <div class="conditions-score-card">
+                            <span class="card-label">Observing Quality</span>
+                            <span class="conditions-score" id="conditionsScore">--</span>
+                            <span class="score-label" id="conditionsScoreLabel">--</span>
+                        </div>
+
+                        <h3 class="section-title">Condition Breakdown</h3>
+
+                        <div class="condition-list">
+                            <div class="condition-row">
+                                <span>Cloud Cover</span>
+                                <span id="conditionsCloud">--</span>
+                            </div>
+
+                            <div class="condition-row">
+                                <span>Humidity</span>
+                                <span id="conditionsHumidity">--</span>
+                            </div>
+
+                            <div class="condition-row">
+                                <span>Wind</span>
+                                <span id="conditionsWind">--</span>
+                            </div>
+
+                            <div class="condition-row">
+                                <span>Moon Illumination</span>
+                                <span id="conditionsMoon">--</span>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div id="weatherTab" class="condition-tab-content">
+                        <div class="weather-grid">
+                            
+                            <div class="weather-card">
+                                <span class="card-label">Temperature</span>
+                                <span class="card-value" id="weatherTemperature">--</span>
+                            </div>
+
+                            <div class="weather-card">
+                                <span class="card-label">Cloud Cover</span>
+                                <span class="card-value" id="weatherCloud">--</span>
+                            </div>
+                            
+                            <div class="weather-card">
+                                <span class="card-label">Humidity</span>
+                                <span class="card-value" id="weatherHumidity">--</span>
+                            </div>
+
+                            <div class="weather-card">
+                                <span class="card-label">Dew Point</span>
+                                <span class="card-value" id="weatherDewPoint">--</span>
+                            </div>
+
+                            <div class="weather-card wide">
+                                <span class="card-label">Wind</span>
+                                <span class="card-value" id="weatherWind">--</span>
+                            </div>
+
+                            <div class="weather-card">
+                                <span class="card-label">Pressure</span>
+                                <span class="card-value" id="weatherPressure">--</span>
+                            </div>
+
+                            <div class="weather-card">
+                                <span class="card-label">Visibility</span>
+                                <span class="card-value" id="weatherVisibility">--</span>
+                            </div>
+
+                        </div>
+
+                        <h3 class="section-title">Hourly Forecast</h3>
+
+                        <div id="weatherHourly" class="hourly-weather"></div>
+                    
+                    </div>
+
+                    <div id="astronomyTab" class="condition-tab-content">
+                        
+                        <div class="astronomy-moon-card">
+                            <span class="card-label">Moon Phase</span>
+                            <span class="card-value" id="astronomyMoonPhase">--</span>
+                        
+                            <span class="card-label">Illumination</span>
+                            <span class="card-value" id="astronomyMoonIllumination">--</span>
+                        </div>
+                        
+                        <h3 class="section-title">Sun & Twilight</h3>
+
+                        <div class="condition-list">
+                            <div class="condition-row">
+                                <span>Sunset</span>
+                                <span id="astronomySunset">--</span>
+                            </div>
+
+                            <div class="condition-row">
+                                <span>Civil Twilight Ends</span>
+                                <span id="astronomyCivilEnd">--</span>
+                            </div>
+
+                            <div class="condition-row">
+                                <span>Nautical Twilight Ends</span>
+                                <span id="astronomyNauticalEnd">--</span>
+                            </div>
+
+                            <div class="condition-row">
+                                <span>Astronomical Darkness Begins</span>
+                                <span id="astronomyDarknessStart">--</span>
+                            </div>
+
+                            <div class="condition-row">
+                                <span>Astronomical Darkness Ends</span>
+                                <span id="astronomyDarknessEnd">--</span>
+                            </div>
+
+                            <div class="condition-row">
+                                <span>Sunrise</span>
+                                <span id="astronomySunrise">--</span>
+                            </div>
+                        </div>
+
+                        <div class="darkness-card">
+                            <span class="card-label">Tonight's Darkness</span>
+
+                            <div class="darkness-range">
+                                <span id="darknessRange">--</span>
+                            </div>
+
+                            <div class="darkness-duration">
+                                <span id="darknessDuration">--</span> of darkness
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <section id="explorePage" class="page">
+
+                    <div class="page-header">
+                        <h2>Explore</h2>
+                        <p>Discover what's visible tonight</p>
+                    </div>
+
+                    <div class="explore-filters">
+                        <button class="filter-button active" data-filter="all">All</button>
+                        <button class="filter-button" data-filter="planets">Planets</button>
+                        <button class="filter-button" data-filter="stars">Stars</button>
+                        <button class="filter-button" data-filter="deep-sky">Deep Sky</button>
+                    </div>
+
+                    <section id="highlightsSection">
+                        <h3 class="section-title">Tonight's Highlights</h3>
+
+                        <div id="highlightGrid" class="highlight-grid">
+                            <p class="loading-text">Waiting for location...</p>
+                        </div>
+                    </section>
+
+                    <section id="planetsSection">
+                        <h3>Planets Tonight</h3>
+                        <div id="planetList" class="planet-list"></div>
+                    </section>
+
+                    <section id="starsSection">
+                        <h3>Stars Tonight</h3>
+                        <div id="starList" class="planet-list"></div>
+                    </section>
+
+                    <section id="deepSkySection">
+                        <h3>Deep Sky Tonight</h3>
+                        <div id="deepSkyList" class="planet-list"></div>
+                    </section>
+
+                </section>
+
+
+
+                <section id="skyMapPage" class="page">
+                    <div class="page-header">
+                        <h2>Sky Map</h2>
+                        <p>Explore the sky above you</p>
+                    </div>
+
+                    <div class="sky-map-container">
+                        <div id="skyDirection" class="sky-direction">
+                        </div>
+
+                        <button 
+                            id="expandSkyMap"
+                            class="sky-expand-button"
+                            aria-label="Expand Sky Map"
+                        >
+                            ⛶
+                        </button>
+
+                        <div id="skyDirection" class="sky-direction">
+                        </div>
+
+                        <canvas id="skyCanvas"></canvas>
+
+                        <div id="skyObjectCard" class="sky-object-card hidden">
+                            <button id="closeSkyObjectCard" class="sky-object-close">×</button>
+
+                            <div class="sky-object-type" id="skyObjectType">Object</div>
+                            <h3 id="skyObjectName">--</h3>
+
+                            <div class="sky-object-info">
+                                <span>Altitude <strong id="skyObjectAltitude">--</strong></span>
+                                <span>Azimuth <strong id="skyObjectAzimuth">--</strong></span>
+                                <span id="skyObjectMagnitudeRow">
+                                    Magnitude <strong id="skyObjectMagnitude">--</strong>
+                                </span>
+                                <span id="skyObjectPhaseRow" style="display: none;">
+                                    Phase
+                                    <strong id="skyObjectPhase">--</strong>
+                                </span>
+                                <span id="skyObjectIlluminationRow" style="display: none;">
+                                    Illumination
+                                    <strong id="skyObjectIllumination">--</strong>
+                                </span>
+                                <span id="skyObjectSunriseRow" style="display: none;">
+                                    Sunrise
+                                    <strong id="skyObjectSunrise">--</strong>
+                                </span>
+
+                                <span id="skyObjectSunsetRow" style="display: none;">
+                                    Sunset
+                                    <strong id="skyObjectSunset">--</strong>
+                                </span>
+                            </div>
+
+                            <div id="skyObjectStatus" class="sky-object-status">--</div>
+
+                            <button id="saveSkyObject" class="save-sky-object">
+                                ♡ Save
+                            </button>
+                        </div>
+                    </div>
+
+                </section> 
+
+                <section id="savedPage" class="page">
+
+                    <div class="page-header">
+                        <h2>Saved</h2>
+                        <p>Your saved celestial objects</p>
+                    </div>
+
+                    <div id="savedObjectList" class="saved-object-list">
+                        <p class="saved-empty">
+                            No saved objects yet.
+                        </p>
+                    </div>
+
+                </section>
+
+
+                <div class="temporary-data">
+                    <span id="humidity"></span>
+                    <span id="wind"></span>
+                    <span id="temperature"></span>
+                    <span id="dewPoint"></span>
+                    <span id="sunset"></span>
+                    <div id="hourlyForecast"></div>
+                </div>
+            </main>
+
+
+
+
+            <nav class="bottom-nav">
+    
+                <button class="nav-item active" onclick="showPage('homePage', this)">
+                    <span>⌂</span>
+                    <small>Home</small>
+                </button>
+
+                <button class="nav-item" onclick="showPage('conditionsPage', this)">
+                    <span>◉</span>
+                    <small>Conditions</small>
+                </button>
+
+                <button class="nav-item" onclick="showPage('explorePage', this)">
+                    <span>✦</span>
+                    <small>Explore</small>
+                </button>
+
+                <button class="nav-item" onclick="showPage('skyMapPage', this)">
+                    <span>◇</span>
+                    <small>Sky Map</small>
+                </button>
+
+                <button class="nav-item" onclick="showPage('savedPage', this)">
+                    <span>♡</span>
+                    <small>Saved</small>
+                </button>
+            </nav>
+        </div>
+
+        
+
+        <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+
+        <script src="script/app.js"></script>
+        <script src="script/astronomy.js"></script>
+        <script src="script/observing.js"></script>
+        <script src="script/weather.js"></script>
+        <script src="script/objects.js"></script>
+        <script src="script/saved.js"></script>
+
+        <script src="script/skymap/camera.js"></script>
+        <script src="script/skymap/render.js"></script>
+        <script src="script/skymap/skymap.js"></script>
+        <script src="script/skymap/interactions.js"></script>
+    </body>
+</html>
+        

@@ -1,0 +1,63 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+
+    background: #02050a;
+    color: #f4f4f4;
+
+    font-family: Helvetica, Arial, sans-serif;
+}
+
+
+/* Main Astra shell */
+.app {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100vh;
+
+    margin: 0 auto;
+
+    padding: 24px 18px;
+}
+
+
+/* Pages */
+.page {
+    display: none;
+    width: 100%;
+    min-height: calc(100vh - 48px);
+
+    padding: 15px 0 110px;
+}
+
+.page.active {
+    display: block;
+}
+
+
+/* Shared card typography */
+.card-label {
+    color: #a7adb7;
+    font-size: 13px;
+}
+
+.card-value {
+    font-size: 23px;
+    font-weight: 400;
+}
+
+
+/* Development-only data */
+.temporary-data {
+    display: none;
+}
