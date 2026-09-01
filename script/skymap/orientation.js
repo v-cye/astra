@@ -181,7 +181,7 @@ function handleDeviceOrientation(event) {
     }
 
     let heading =
-        (360 - event.alpha) % 360;
+        event.alpha;
 
     let altitude =
         event.beta - 90;
