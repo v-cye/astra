@@ -176,40 +176,111 @@ function handleDeviceOrientation(event) {
         return;
     }
 
-    if (event.beta == null || event.alpha == null) {
+    if (
+        event.alpha == null ||
+        event.beta == null ||
+        event.gamma == null
+    ) {
         return;
     }
 
-    let heading =
-        event.alpha;
 
-    let altitude =
-        event.beta - 90;
+    const alpha =
+        event.alpha * Math.PI / 180;
 
-    altitude =
-        Math.max(
-            -90,
-            Math.min(90, altitude)
+    const beta =
+        event.beta * Math.PI / 180;
+
+    const gamma =
+        event.gamma * Math.PI / 180;
+
+    const screenAngle =
+        (
+            screen.orientation?.angle ??
+            window.orientation ??
+            0
+        ) * Math.PI / 180;
+
+    const quaternion =
+        quaternionFromDeviceOrientation(
+            alpha,
+            beta,
+            gamma,
+            screenAngle
         );
 
-    const altRad =
-        altitude * Math.PI / 180;
 
-    const headingRad =
-        heading * Math.PI / 180;
+    let targetForward =
+        rotateVectorByQuaternion(
+            {
+                x: 0,
+                y: 0,
+                z: -1
+            },
+            quaternion
+        );
 
-    const targetForward = {
-        x:
-            Math.cos(altRad) *
-            Math.sin(headingRad),
+    targetForward =
+        normalize(targetForward);
 
-        y:
-            Math.sin(altRad),
 
-        z:
-            Math.cos(altRad) *
-            Math.cos(headingRad)
-    };
+    let compassHeading = null;
+
+    if (
+        typeof event.webkitCompassHeading === "number"
+    ) {
+        compassHeading = event.webkitCompassHeading;
+    }
+    else if (event.absolute && event.alpha != null) {
+        compassHeading =
+            (360 - event.alpha) % 360;
+    }
+
+
+    if (compassHeading != null) {
+        const horizontalLength =
+            Math.sqrt(
+                targetForward.x * targetForward.x +
+                targetForward.z * targetForward.z
+            );
+
+        if (horizontalLength > 0.08) {
+            let rawAzimuth =
+                Math.atan2(
+                    targetForward.x,
+                    targetForward.z
+                ) * 180 / Math.PI;
+
+            rawAzimuth =
+                (rawAzimuth + 360) % 360;
+
+
+            let headingDifference =
+                compassHeading - rawAzimuth;
+
+            headingDifference =
+                (
+                    headingDifference +
+                    540
+                ) % 360 - 180;
+
+
+            targetForward =
+                rotateVector(
+                    targetForward,
+                    {
+                        x: 0,
+                        y: 1,
+                        z: 0
+                    },
+                    headingDifference *
+                        Math.PI / 180
+                );
+
+            targetForward =
+                normalize(targetForward);
+        }
+    }
 
 
     smoothedForward =
@@ -222,109 +293,44 @@ function handleDeviceOrientation(event) {
     cameraForward =
         normalize(smoothedForward);
 
-
     const worldUp = {
         x: 0,
         y: 1,
         z: 0
     };
 
-    let levelRight =
-        cross(
-            cameraForward,
-            worldUp
+    const upProjection =
+        dot(
+            worldUp,
+            cameraForward
         );
 
-    const levelRightLength =
+    const projectedUp = {
+        x:
+            worldUp.x -
+            cameraForward.x * upProjection,
+
+        y:
+            worldUp.y -
+            cameraForward.y * upProjection,
+
+        z:
+            worldUp.z -
+            cameraForward.z * upProjection
+    };
+
+    const projectedUpLength =
         Math.sqrt(
-            levelRight.x * levelRight.x +
-            levelRight.y * levelRight.y +
-            levelRight.z * levelRight.z
+            projectedUp.x * projectedUp.x +
+            projectedUp.y * projectedUp.y +
+            projectedUp.z * projectedUp.z
         );
 
-
-    let previousRight =
-        cross(
-            cameraForward,
-            cameraUp
-        );
-
-    const previousRightLength =
-        Math.sqrt(
-            previousRight.x * previousRight.x +
-            previousRight.y * previousRight.y +
-            previousRight.z * previousRight.z
-        );
-
-    if (previousRightLength > 0.0001) {
-        previousRight =
-            normalize(previousRight);
+    if (projectedUpLength > 0.08) {
+        cameraUp =
+            normalize(projectedUp);
     }
 
-
-    let right = null;
-
-    if (levelRightLength > 0.2) {
-        levelRight =
-            normalize(levelRight);
-
-        const levelAmount =
-            Math.min(
-                1,
-                levelRightLength / 0.4
-            );
-
-        if (previousRightLength > 0.0001) {
-            right =
-                normalize({
-                    x:
-                        previousRight.x *
-                        (1 - levelAmount) +
-                        levelRight.x *
-                        levelAmount,
-
-                    y:
-                        previousRight.y *
-                        (1 - levelAmount) +
-                        levelRight.y *
-                        levelAmount,
-
-                    z:
-                        previousRight.z *
-                        (1 - levelAmount) +
-                        levelRight.z *
-                        levelAmount
-                });
-        }
-        else {
-            right = levelRight;
-        }
-    }
-
-    else if (previousRightLength > 0.0001) {
-        right = previousRight;
-    }
-
-
-    if (right) {
-        const newUp =
-            cross(
-                right,
-                cameraForward
-            );
-
-        const newUpLength =
-            Math.sqrt(
-                newUp.x * newUp.x +
-                newUp.y * newUp.y +
-                newUp.z * newUp.z
-            );
-
-        if (newUpLength > 0.0001) {
-            cameraUp =
-                normalize(newUp);
-        }
-    }
 
     requestSkyRedraw();
 }
