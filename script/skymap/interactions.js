@@ -1,55 +1,94 @@
 let selectedSkyObject = null;
 let skyObjectsOnScreen = [];
 
+let pointerStartX = 0;
+let pointerStartY = 0;
+let didDrag = false;
+
+let activePointers = new Map();
+let pinchDistance = null;
+let redrawRequested = false;
+
+function requestSkyRedraw() {
+    if (redrawRequested) return;
+
+    redrawRequested = true;
+
+    requestAnimationFrame(() => {
+        drawSky();
+        redrawRequested = false;
+    });
+}
 
 
 skyCanvas.addEventListener("pointerdown", event => {
-    isDragging = true;
-    didDrag = false;
+    event.preventDefault();
 
-    pointerStartX = event.clientX;
-    pointerStartY = event.clientY;
-
-    lastPointerX = event.clientX;
-    lastPointerY = event.clientY;
+    activePointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+    });
 
     skyCanvas.setPointerCapture(event.pointerId);
+
+    if (activePointers.size === 1) {
+        isDragging = true;
+        didDrag = false;
+
+        pointerStartX = event.clientX;
+        pointerStartY = event.clientY;
+
+        lastPointerX = event.clientX;
+        lastPointerY = event.clientY;
+    }
+
+    if (activePointers.size === 2) {
+        isDragging = false;
+        pinchDistance = getPinchDistance();
+    }
 });
 
 
 skyCanvas.addEventListener("pointermove", event => {
-    if (!isDragging) {
+    if (!activePointers.has(event.pointerId)) return;
+    
+    event.preventDefault();
+
+    activePointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+    });
+
+    if (activePointers.size === 2) {
+        const newDistance = getPinchDistance();
+
+        if (pinchDistance) {
+            skyZoom *= newDistance / pinchDistance;
+            skyZoom = Math.max(0.7, Math.min(5, skyZoom));
+
+            requestSkyRedraw();
+        }
+
+        pinchDistance = newDistance;
         return;
     }
+
+    if (!isDragging) return;
 
     const dx = event.clientX - lastPointerX;
     const dy = event.clientY - lastPointerY;
 
-    const totalDragX =
-        event.clientX - pointerStartX;
+    const totalX = event.clientX - pointerStartX;
+    const totalY = event.clientY - pointerStartY;
 
-    const totalDragY =
-        event.clientY - pointerStartY;
-
-    const dragDistance =
-        Math.sqrt(
-            totalDragX * totalDragX +
-            totalDragY * totalDragY
-        );
-
-    if (dragDistance > 5) {
+    if (Math.hypot(totalX, totalY) > 5) {
         didDrag = true;
     }
 
-    const sensitivity =
-        0.18 / skyZoom;
+    const sensitivity = 0.18 / skyZoom;
 
-    const yaw =
-        dx * sensitivity * Math.PI / 180;
-
-    const pitch =
-        dy * sensitivity * Math.PI / 180;
-
+    const yaw = dx * sensitivity * Math.PI / 180;
+    const pitch = dy * sensitivity * Math.PI / 180;
 
     const worldUp = {
         x: 0,
@@ -57,91 +96,63 @@ skyCanvas.addEventListener("pointermove", event => {
         z: 0
     };
 
-    cameraForward =
-        rotateVector(
-            cameraForward,
-            worldUp,
-            yaw
-        );
+    cameraForward = rotateVector(cameraForward, worldUp, yaw);
+    cameraUp = rotateVector(cameraUp, worldUp, yaw);
+    
+    const cameraRight = normalize(cross(cameraForward, cameraUp));
 
-    cameraUp =
-        rotateVector(
-            cameraUp,
-            worldUp,
-            yaw
-        );
+    cameraForward = rotateVector(cameraForward, cameraRight, pitch);
+    cameraUp = rotateVector(cameraUp, cameraRight, pitch);
+    cameraForward = normalize(cameraForward);
 
-    const cameraRight =
-        normalize(
-            cross(
-                cameraForward,
-                cameraUp
-            )
-        );
+    const correctedRight = normalize(cross(cameraForward, cameraUp));
 
-    cameraForward =
-        rotateVector(
-            cameraForward,
-            cameraRight,
-            pitch
-        );
-
-    cameraUp =
-        rotateVector(
-            cameraUp,
-            cameraRight,
-            pitch
-        );
-        
-    cameraForward =
-        normalize(cameraForward);
-
-    const correctedRight =
-        normalize(
-            cross(
-                cameraForward,
-                cameraUp
-            )
-        );
-
-    cameraUp =
-        normalize(
-            cross(
-                correctedRight,
-                cameraForward
-            )
-        );
+    cameraUp = normalize(cross(correctedRight, cameraForward));
 
     lastPointerX = event.clientX;
     lastPointerY = event.clientY;
 
-    drawSky();
+    requestSkyRedraw();
 });
 
 
-skyCanvas.addEventListener("pointerup", event => {
-    isDragging = false;
+function endPointer(event) {
+    activePointers.delete(event.pointerId);
 
-    if (skyCanvas.hasPointerCapture(event.pointerId)) {
+    if(skyCanvas.hasPointerCapture(event.pointerId)) {
         skyCanvas.releasePointerCapture(event.pointerId);
     }
-});
 
-
-skyCanvas.addEventListener("pointercancel", () => {
-    isDragging = false;
-});
-
-
-skyCanvas.addEventListener("pointerleave", event => {
-    if (
-        isDragging &&
-        !skyCanvas.hasPointerCapture(event.pointerId)
-    ) {
+    if (activePointers.size === 0) {
         isDragging = false;
+        pinchDistance = null;
+        return;
     }
-});
 
+    if (activePointers.size === 1) {
+        const remaining = activePointers.values().next().value;
+
+        lastPointerX = remaining.x;
+        lastPointerY = remaining.y;
+
+        isDragging = true;
+        pinchDistance = null;
+    }
+}
+
+skyCanvas.addEventListener("pointerup", endPointer);
+skyCanvas.addEventListener("pointercancel", endPointer);
+
+function getPinchDistance() {
+    const points = Array.from(activePointers.values());
+
+    if (points.length < 2) return null;
+
+    return Math.hypot(
+        points[0].x - points[1].x,
+        points[0].y - points[1].y
+    );
+}
 
 skyCanvas.addEventListener("wheel", event => {
     event.preventDefault();
@@ -152,14 +163,11 @@ skyCanvas.addEventListener("wheel", event => {
         skyZoom /= 1.1;
     }
 
-    skyZoom = Math.max(
-        0.7,
-        Math.min(5, skyZoom)
-    );
+    skyZoom = Math.max(0.7, Math.min(5, skyZoom));
 
-    drawSky();
-}, { passive: false });
-
+    requestSkyRedraw();
+},
+{ passive: false });
 
 
 const skyMapContainer =
@@ -264,11 +272,6 @@ skyCanvas.addEventListener("click", event => {
             });
     }
 });
-
-
-let pointerStartX = 0;
-let pointerStartY = 0;
-let didDrag = false;
 
 
 function showSkyObjectCard(object) {
