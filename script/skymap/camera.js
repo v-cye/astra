@@ -79,7 +79,7 @@ function horizonToCanvas(altitude, azimuth) {
         normalize(cameraUp);
 
     const right =
-        normalize(cross(up, forward));
+        normalize(cross(forward, up));
 
     const cameraX =
         dot(objectVector, right);
@@ -190,7 +190,7 @@ function pointCameraAtHorizon(altitude, azimuth) {
         z: 0
     };
 
-    let right = cross(worldUp, cameraForward);
+    let right = cross(cameraForward, worldUp);
 
     if (
         Math.abs(right.x) < 0.0001 &&
@@ -206,7 +206,7 @@ function pointCameraAtHorizon(altitude, azimuth) {
 
     right = normalize(right);
 
-    cameraUp = normalize(cross(cameraForward, right));
+    cameraUp = normalize(cross(right, cameraForward));
 
     updateSkyDirection();
 }
