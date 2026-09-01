@@ -67,7 +67,7 @@ function horizonToCanvas(altitude, azimuth) {
         azimuth * Math.PI / 180;
 
     const objectVector = {
-        x: Math.cos(altRad) * Math.sin(azRad),
+        x: -Math.cos(altRad) * Math.sin(azRad),
         y: Math.sin(altRad),
         z: Math.cos(altRad) * Math.cos(azRad)
     };
@@ -154,7 +154,7 @@ function updateSkyDirection() {
 
     let azimuth =
         Math.atan2(
-            cameraForward.x,
+            -cameraForward.x,
             cameraForward.z
         ) * 180 / Math.PI;
 
@@ -179,7 +179,7 @@ function pointCameraAtHorizon(altitude, azimuth) {
     const azRad = azimuth * Math.PI / 180;
 
     cameraForward = normalize({
-        x: Math.cos(altRad) * Math.sin(azRad),
+        x: -Math.cos(altRad) * Math.sin(azRad),
         y: Math.sin(altRad),
         z: Math.cos(altRad) * Math.cos(azRad)
     });
