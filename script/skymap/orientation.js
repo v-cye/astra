@@ -51,10 +51,9 @@ function quaternionFromDeviceOrientation(
     gamma,
     screenAngle
 ) {
-
     const qAlpha =
         quaternionFromAxisAngle(
-            { x: 0, y: 0, z: 1 },
+            { x: 0, y: 1, z: 0 },
             alpha
         );
 
@@ -66,8 +65,8 @@ function quaternionFromDeviceOrientation(
 
     const qGamma =
         quaternionFromAxisAngle(
-            { x: 0, y: 1, z: 0 },
-            gamma
+            { x: 0, y: 0, z: 1 },
+            -gamma
         );
 
     let q =
@@ -78,7 +77,6 @@ function quaternionFromDeviceOrientation(
                 qGamma
             )
         );
-
 
     const cameraCorrection =
         quaternionFromAxisAngle(
