@@ -77,49 +77,13 @@ function horizonToCanvas(altitude, azimuth) {
     const forward =
         normalize(cameraForward);
 
-    const viewAltitude =
-        Math.asin(forward.y);
+    const up =
+        normalize(cameraUp);
 
-    const horizontalLength =
-        Math.sqrt(
-            forward.x * forward.x +
-            forward.z * forward.z
+    const right =
+        normalize(
+            cross(up, forward)
         );
-
-    let viewAzimuth;
-
-    if (horizontalLength > 0.08) {
-        viewAzimuth =
-            Math.atan2(
-                forward.x,
-                forward.z
-            );
-
-        lastStableViewAzimuth =
-            viewAzimuth;
-    } else {
-        viewAzimuth =
-            lastStableViewAzimuth;
-    }
-
-    const right = {
-        x: Math.cos(viewAzimuth),
-        y: 0,
-        z: -Math.sin(viewAzimuth)
-    };
-
-    const up = {
-        x:
-            -Math.sin(viewAltitude) *
-            Math.sin(viewAzimuth),
-
-        y:
-            Math.cos(viewAltitude),
-
-        z:
-            -Math.sin(viewAltitude) *
-            Math.cos(viewAzimuth)
-    };
 
     const cameraX =
         dot(objectVector, right);

@@ -1,6 +1,8 @@
 let motionModeEnabled = false;
 
 let smoothedForward = null;
+let smoothedUp = null;
+let compassYawOffset = null;
 
 
 function multiplyQuaternions(a, b) {
@@ -185,7 +187,6 @@ function handleDeviceOrientation(event) {
         return;
     }
 
-
     const alpha =
         event.alpha * Math.PI / 180;
 
@@ -210,79 +211,109 @@ function handleDeviceOrientation(event) {
             screenAngle
         );
 
-
     let targetForward =
-        rotateVectorByQuaternion(
-            {
-                x: 0,
-                y: 0,
-                z: -1
-            },
-            quaternion
+        normalize(
+            rotateVectorByQuaternion(
+                { x: 0, y: 0, z: -1 },
+                quaternion
+            )
         );
 
-    targetForward =
-        normalize(targetForward);
-
+    let targetUp =
+        normalize(
+            rotateVectorByQuaternion(
+                { x: 0, y: 1, z: 0 },
+                quaternion
+            )
+        );
 
     let compassHeading = null;
 
     if (
         typeof event.webkitCompassHeading === "number"
     ) {
-        compassHeading = event.webkitCompassHeading;
+        compassHeading =
+            event.webkitCompassHeading;
     }
-    else if (event.absolute && event.alpha != null) {
+    else if (
+        event.absolute &&
+        event.alpha != null
+    ) {
         compassHeading =
             (360 - event.alpha) % 360;
     }
 
+    const horizontalLength =
+        Math.sqrt(
+            targetForward.x * targetForward.x +
+            targetForward.z * targetForward.z
+        );
 
-    if (compassHeading != null) {
-        const horizontalLength =
-            Math.sqrt(
-                targetForward.x * targetForward.x +
-                targetForward.z * targetForward.z
-            );
+    if (
+        compassHeading != null &&
+        horizontalLength > 0.35
+    ) {
+        let rawAzimuth =
+            Math.atan2(
+                targetForward.x,
+                targetForward.z
+            ) * 180 / Math.PI;
 
-        if (horizontalLength > 0.08) {
-            let rawAzimuth =
-                Math.atan2(
-                    targetForward.x,
-                    targetForward.z
-                ) * 180 / Math.PI;
+        rawAzimuth =
+            (rawAzimuth + 360) % 360;
 
-            rawAzimuth =
-                (rawAzimuth + 360) % 360;
+        let desiredOffset =
+            compassHeading - rawAzimuth;
 
+        desiredOffset =
+            (
+                desiredOffset +
+                540
+            ) % 360 - 180;
 
-            let headingDifference =
-                compassHeading - rawAzimuth;
+        if (compassYawOffset == null) {
+            compassYawOffset =
+                desiredOffset;
+        }
+        else {
+            let difference =
+                desiredOffset -
+                compassYawOffset;
 
-            headingDifference =
+            difference =
                 (
-                    headingDifference +
+                    difference +
                     540
                 ) % 360 - 180;
 
-
-            targetForward =
-                rotateVector(
-                    targetForward,
-                    {
-                        x: 0,
-                        y: 1,
-                        z: 0
-                    },
-                    headingDifference *
-                        Math.PI / 180
-                );
-
-            targetForward =
-                normalize(targetForward);
+            compassYawOffset +=
+                difference * 0.04;
         }
     }
 
+    if (compassYawOffset != null) {
+        const correction =
+            compassYawOffset *
+            Math.PI / 180;
+
+        targetForward =
+            normalize(
+                rotateVector(
+                    targetForward,
+                    { x: 0, y: 1, z: 0 },
+                    correction
+                )
+            );
+
+        targetUp =
+            normalize(
+                rotateVector(
+                    targetUp,
+                    { x: 0, y: 1, z: 0 },
+                    correction
+                )
+            );
+    }
 
     smoothedForward =
         smoothOrientationVector(
@@ -291,47 +322,41 @@ function handleDeviceOrientation(event) {
             0.18
         );
 
+    smoothedUp =
+        smoothOrientationVector(
+            smoothedUp,
+            targetUp,
+            0.18
+        );
+
     cameraForward =
         normalize(smoothedForward);
 
-    const worldUp = {
-        x: 0,
-        y: 1,
-        z: 0
-    };
-
-    const upProjection =
+    const upDotForward =
         dot(
-            worldUp,
+            smoothedUp,
             cameraForward
         );
 
-    const projectedUp = {
+    const correctedUp = {
         x:
-            worldUp.x -
-            cameraForward.x * upProjection,
+            smoothedUp.x -
+            cameraForward.x *
+            upDotForward,
 
         y:
-            worldUp.y -
-            cameraForward.y * upProjection,
+            smoothedUp.y -
+            cameraForward.y *
+            upDotForward,
 
         z:
-            worldUp.z -
-            cameraForward.z * upProjection
+            smoothedUp.z -
+            cameraForward.z *
+            upDotForward
     };
 
-    const projectedUpLength =
-        Math.sqrt(
-            projectedUp.x * projectedUp.x +
-            projectedUp.y * projectedUp.y +
-            projectedUp.z * projectedUp.z
-        );
-
-    if (projectedUpLength > 0.08) {
-        cameraUp =
-            normalize(projectedUp);
-    }
-
+    cameraUp =
+        normalize(correctedUp);
 
     requestSkyRedraw();
 }
@@ -374,6 +399,9 @@ async function enableMotionMode() {
     motionModeEnabled = true;
 
     smoothedForward = null;
+    smoothedUp = null;
+    compassYawOffset = null;
+    
 
     window.addEventListener(
         "deviceorientation",
@@ -395,6 +423,8 @@ function disableMotionMode() {
     );
 
     smoothedForward = null;
+    smoothedUp = null;
+    compassYawOffset = null;
 
     updateMotionButton();
 }
