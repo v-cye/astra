@@ -1,7 +1,7 @@
 let motionModeEnabled = false;
 
-let smoothHeading = null;
-let smoothAltitude = null;
+let smoothedHeading = null;
+let smoothedAltitude = null;
 
 function clampOrientation(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -16,7 +16,7 @@ function smoothValue(current, target, amount = 0.18) {
 }
 
 
-function smoothHeading(current, target, amount = 0.18) {
+function smoothCompassHeading(current, target, amount = 0.18) {
     if (current == null) {
         return target;
     }
@@ -53,7 +53,7 @@ function handleDeviceOrientation(event) {
 
     altitude = clampOrientation(altitude, -90, 90);
 
-    smoothedHeading = smoothHeading(smoothedHeading, heading);
+    smoothedHeading = smoothCompassHeading(smoothedHeading, heading);
 
     smoothedAltitude = smoothValue(smoothedAltitude, altitude);
 
@@ -69,7 +69,7 @@ async function enabledMotionMode() {
         typeof DeviceOrientationEvent.requestPermission === "function"
     ) {
         try {
-            const permission = await DeviceMotionEvent.requestPermission();
+            const permission = await DeviceOrientationEvent.requestPermission();
 
             if (permission !== "granted") {
                 alert("Motion access is needed to move Sky Map with your phone");
@@ -86,7 +86,7 @@ async function enabledMotionMode() {
     motionModeEnabled = true;
 
     smoothedHeading = null;
-    smoothAltitude = null;
+    smoothedAltitude = null;
 
     window.addEventListener(
         "deviceorientation", handleDeviceOrientation, true
@@ -110,16 +110,19 @@ function disableMotionMode() {
 
 const motionModeButton = document.getElementById("motionModeButton");
 
-motionModeButton.addEventListener(
-    "click",
-    async () => {
-        if (motionModeEnabled) {
-            disableMotionMode();
-        } else {
-            await enabledMotionMode();
+if (motionModeButton) {
+    motionModeButton.addEventListener(
+        "click",
+        async () => {
+            if (motionModeEnabled) {
+                disableMotionMode();
+            } else {
+                await enabledMotionMode();
+            }
         }
-    }
-);
+    );
+}
+    
 
 
 function updateMotionButton() {
