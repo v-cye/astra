@@ -1,29 +1,175 @@
 let motionModeEnabled = false;
 
-let smoothedHeading = null;
-let smoothedAltitude = null;
+let smoothedForward = null;
+let smoothedUp = null;
 
-function clampOrientation(value, min, max) {
-    return Math.max(min, Math.min(max, value));
+
+function multiplyQuaternions(a, b) {
+    return {
+        x:
+            a.w * b.x +
+            a.x * b.w +
+            a.y * b.z -
+            a.z * b.y,
+
+        y:
+            a.w * b.y -
+            a.x * b.z +
+            a.y * b.w +
+            a.z * b.x,
+
+        z:
+            a.w * b.z +
+            a.x * b.y -
+            a.y * b.x +
+            a.z * b.w,
+
+        w:
+            a.w * b.w -
+            a.x * b.x -
+            a.y * b.y -
+            a.z * b.z
+    };
 }
 
-function smoothValue(current, target, amount = 0.18) {
-    if (current == null) {
-        return target;
-    }
 
-    return current + (target - current) * amount;
+function quaternionFromAxisAngle(axis, angle) {
+    const half = angle / 2;
+    const sin = Math.sin(half);
+
+    return {
+        x: axis.x * sin,
+        y: axis.y * sin,
+        z: axis.z * sin,
+        w: Math.cos(half)
+    };
 }
 
 
-function smoothCompassHeading(current, target, amount = 0.18) {
-    if (current == null) {
-        return target;
+function quaternionFromDeviceOrientation(
+    alpha,
+    beta,
+    gamma,
+    screenAngle
+) {
+
+    const qAlpha =
+        quaternionFromAxisAngle(
+            { x: 0, y: 0, z: 1 },
+            alpha
+        );
+
+    const qBeta =
+        quaternionFromAxisAngle(
+            { x: 1, y: 0, z: 0 },
+            beta
+        );
+
+    const qGamma =
+        quaternionFromAxisAngle(
+            { x: 0, y: 1, z: 0 },
+            gamma
+        );
+
+    let q =
+        multiplyQuaternions(
+            qAlpha,
+            multiplyQuaternions(
+                qBeta,
+                qGamma
+            )
+        );
+
+
+    const cameraCorrection =
+        quaternionFromAxisAngle(
+            { x: 1, y: 0, z: 0 },
+            -Math.PI / 2
+        );
+
+    q =
+        multiplyQuaternions(
+            q,
+            cameraCorrection
+        );
+
+    const screenCorrection =
+        quaternionFromAxisAngle(
+            { x: 0, y: 0, z: 1 },
+            -screenAngle
+        );
+
+    q =
+        multiplyQuaternions(
+            q,
+            screenCorrection
+        );
+
+    return q;
+}
+
+
+function rotateVectorByQuaternion(vector, q) {
+    const qVector = {
+        x: q.x,
+        y: q.y,
+        z: q.z
+    };
+
+    const uv =
+        cross(qVector, vector);
+
+    const uuv =
+        cross(qVector, uv);
+
+    return {
+        x:
+            vector.x +
+            2 * (
+                uv.x * q.w +
+                uuv.x
+            ),
+
+        y:
+            vector.y +
+            2 * (
+                uv.y * q.w +
+                uuv.y
+            ),
+
+        z:
+            vector.z +
+            2 * (
+                uv.z * q.w +
+                uuv.z
+            )
+    };
+}
+
+
+
+function smoothOrientationVector(
+    current,
+    target,
+    amount = 0.16
+) {
+    if (!current) {
+        return normalize(target);
     }
 
-    let difference = ((target - current + 540) % 360) - 180;
+    return normalize({
+        x:
+            current.x +
+            (target.x - current.x) * amount,
 
-    return (current + difference * amount + 360) % 360;
+        y:
+            current.y +
+            (target.y - current.y) * amount,
+
+        z:
+            current.z +
+            (target.z - current.z) * amount
+    });
 }
 
 
@@ -32,52 +178,131 @@ function handleDeviceOrientation(event) {
         return;
     }
 
-    let heading = null;
-
-    if (typeof event.webkitCompassHeading === "number") {
-        heading = (360 - event.webkitCompassHeading) % 360;
-    }
-
-    else if (event.alpha != null) {
-        heading = event.alpha;
-    }
-
     if (
-        heading == null || event.beta == null
+        event.alpha == null ||
+        event.beta == null ||
+        event.gamma == null
     ) {
         return;
     }
 
+    const alpha =
+        event.alpha * Math.PI / 180;
 
-    let altitude = event.beta - 90;
+    const beta =
+        event.beta * Math.PI / 180;
 
-    altitude = clampOrientation(altitude, -90, 90);
+    const gamma =
+        event.gamma * Math.PI / 180;
 
-    smoothedHeading = smoothCompassHeading(smoothedHeading, heading);
+    const screenAngle =
+        (
+            screen.orientation?.angle ??
+            window.orientation ??
+            0
+        ) * Math.PI / 180;
 
-    smoothedAltitude = smoothValue(smoothedAltitude, altitude);
+    const quaternion =
+        quaternionFromDeviceOrientation(
+            alpha,
+            beta,
+            gamma,
+            screenAngle
+        );
 
-    pointCameraAtHorizon(smoothedAltitude, smoothedHeading);
+    const targetForward =
+        rotateVectorByQuaternion(
+            {
+                x: 0,
+                y: 0,
+                z: -1
+            },
+            quaternion
+        );
+
+    const targetUp =
+        rotateVectorByQuaternion(
+            {
+                x: 0,
+                y: 1,
+                z: 0
+            },
+            quaternion
+        );
+
+    smoothedForward =
+        smoothOrientationVector(
+            smoothedForward,
+            targetForward
+        );
+
+    smoothedUp =
+        smoothOrientationVector(
+            smoothedUp,
+            targetUp
+        );
+
+    cameraForward =
+        normalize(smoothedForward);
+
+    let right =
+        cross(
+            cameraForward,
+            smoothedUp
+        );
+
+    const rightLength =
+        Math.sqrt(
+            right.x * right.x +
+            right.y * right.y +
+            right.z * right.z
+        );
+
+    if (rightLength > 0.0001) {
+        right = normalize(right);
+
+        cameraUp =
+            normalize(
+                cross(
+                    right,
+                    cameraForward
+                )
+            );
+    }
 
     requestSkyRedraw();
 }
 
-async function enabledMotionMode() {
 
+async function enableMotionMode() {
     if (
-        typeof DeviceOrientationEvent !== "undefined" &&
-        typeof DeviceOrientationEvent.requestPermission === "function"
+        typeof DeviceOrientationEvent !==
+            "undefined" &&
+        typeof DeviceOrientationEvent
+            .requestPermission === "function"
     ) {
         try {
-            const permission = await DeviceOrientationEvent.requestPermission();
+            const permission =
+                await DeviceOrientationEvent
+                    .requestPermission();
 
             if (permission !== "granted") {
-                alert("Motion access is needed to move Sky Map with your phone");
+                alert(
+                    "Motion access is needed to move the Sky Map with your phone."
+                );
 
                 return;
             }
+
         } catch (error) {
-            console.error("Motion permission error:", error);
+            console.error(
+                "Motion permission error:",
+                error
+            );
+
+            alert(
+                "Could not enable motion controls."
+            );
 
             return;
         }
@@ -85,15 +310,18 @@ async function enabledMotionMode() {
 
     motionModeEnabled = true;
 
-    smoothedHeading = null;
-    smoothedAltitude = null;
+    smoothedForward = null;
+    smoothedUp = null;
 
     window.addEventListener(
-        "deviceorientation", handleDeviceOrientation, true
+        "deviceorientation",
+        handleDeviceOrientation,
+        true
     );
 
     updateMotionButton();
 }
+
 
 function disableMotionMode() {
     motionModeEnabled = false;
@@ -104,11 +332,18 @@ function disableMotionMode() {
         true
     );
 
+    smoothedForward = null;
+    smoothedUp = null;
+
     updateMotionButton();
 }
 
 
-const motionModeButton = document.getElementById("motionModeButton");
+const motionModeButton =
+    document.getElementById(
+        "motionModeButton"
+    );
+
 
 if (motionModeButton) {
     motionModeButton.addEventListener(
@@ -117,17 +352,25 @@ if (motionModeButton) {
             if (motionModeEnabled) {
                 disableMotionMode();
             } else {
-                await enabledMotionMode();
+                await enableMotionMode();
             }
         }
     );
 }
-    
 
 
 function updateMotionButton() {
-    motionModeButton.textContent = motionModeEnabled
-        ? "◉ Motion On" : "◉ Motion";
+    if (!motionModeButton) {
+        return;
+    }
 
-    motionModeButton.classList.toggle("active", motionModeEnabled);
+    motionModeButton.textContent =
+        motionModeEnabled
+            ? "◉ Motion On"
+            : "◉ Motion";
+
+    motionModeButton.classList.toggle(
+        "active",
+        motionModeEnabled
+    );
 }
