@@ -35,11 +35,11 @@ function handleDeviceOrientation(event) {
     let heading = null;
 
     if (typeof event.webkitCompassHeading === "number") {
-        heading = event.webkitCompassHeading;
+        heading = (360 - event.webkitCompassHeading) % 360;
     }
 
     else if (event.alpha != null) {
-        heading = (360 - event.alpha) % 360;
+        heading = event.alpha;
     }
 
     if (
