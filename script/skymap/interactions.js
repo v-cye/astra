@@ -262,14 +262,6 @@ skyCanvas.addEventListener("click", event => {
         closestDistance <= selectionRadius
     ) {
         showSkyObjectCard(closestObject);
-
-        document
-            .getElementById("closeSkyObjectCard")
-            .addEventListener("click", () => {
-                document
-                    .getElementById("skyObjectCard")
-                    .classList.add("hidden");
-            });
     }
 });
 
@@ -373,6 +365,34 @@ function showSkyObjectCard(object) {
     updateSaveButton(object);
 }
 
+function openSkyObjectCardByName(name, exploreType) {
+    const typeMap = {
+        "Planet": "planet",
+        "Star": "star",
+        "Deep Sky": "dso"
+    };
+
+    const skyType = typeMap[exploreType];
+    
+    const object = skyObjectsOnScreen.find(item => {
+        return (
+            item.name === name &&
+            item.type === skyType
+        );
+    });
+
+    if (!object) {
+        console.log(
+            "Could not find object on Sky Map:",
+            name,
+            exploreType
+        );
+
+        return;
+    }
+
+    showSkyObjectCard(object);
+}
 
 function formatSkyObjectType(type) {
     const names = {
@@ -515,4 +535,13 @@ document
         updateSaveButton(
             selectedSkyObject
         );
+    });
+
+
+document
+    .getElementById("closeSkyObjectCard")
+    .addEventListener("click", () => {
+        document
+            .getElementById("skyObjectCard")
+            .classList.add("hidden");
     });

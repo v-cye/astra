@@ -262,7 +262,7 @@ function displayPlanetsTonight(planets) {
                 : `Peak altitude ${altitude}° · Best around ${formatObjectTime(planet.bestTime)}`;
 
         html += `
-            <div class="object-row">
+            <div class="object-row" data-object-name="${planet.name}" data-object-type="Planet">
 
                 <div>
                     <span class="object-name">
@@ -274,15 +274,22 @@ function displayPlanetsTonight(planets) {
                     </span>
                 </div>
 
-                <span class="object-status">
-                    ${planet.status}
-                </span>
+                <div class="object-row-action">
+                    <span class="object-status">
+                        ${planet.status}
+                    </span>
+
+                    <span class="view-sky-map">
+                        View on Sky Map
+                    </span>
+                </div>
 
             </div>
         `;
     }
 
     planetList.innerHTML = html;
+    setupExploreRowClicks();
 }
 
 
@@ -302,7 +309,7 @@ function updateTonightHighlights() {
     const candidates = allObjects
         .filter(isHighlightCandidate)
         .sort(compareHighlightObjects)
-        .slice(0, 3);
+        .slice(0, 5);
 
     if (candidates.length === 0) {
         highlightGrid.innerHTML = `
@@ -353,6 +360,21 @@ function setupHighlightCardClicks() {
 
             openObjectOnSkyMap(name, type);
         });
+    });
+}
+
+function setupExploreRowClicks() {
+    document.querySelectorAll(".object-row").forEach(row => {
+        row.onclick = () => {
+            const name = row.dataset.objectName;
+            const type = row.dataset.objectType;
+
+            if (!name || !type) {
+                return;
+            }
+
+            openObjectOnSkyMap(name, type);
+        };
     });
 }
 
@@ -436,10 +458,12 @@ function openObjectOnSkyMap(name, type) {
 
     pointCameraAtHorizon(horizon.altitude, horizon.azimuth);
 
-    openSkyMapPage();
+    skyZoom = 2.5;
+
+    openSkyMapPage(name, type);
 }
 
-function openSkyMapPage() {
+function openSkyMapPage(targetName, targetType) {
     document.querySelectorAll(".page").forEach(page => {
         page.classList.remove("active");
     });
@@ -462,7 +486,10 @@ function openSkyMapPage() {
 
     requestAnimationFrame(() => {
         resizeSkyCanvas();
-        drawSky();
+
+        requestAnimationFrame(() => {
+            openSkyObjectCardByName(targetName, targetType);
+        });
     });
 }
 
@@ -667,7 +694,7 @@ function displayStarsTonight(stars) {
         const altitude = Math.round(star.maxAltitude);
 
         html += `
-            <div class="object-row">
+            <div class="object-row" data-object-name="${star.name}" data-object-type="Star">
                 <div>
                     <span class="object-name">
                         ${star.name}
@@ -679,14 +706,21 @@ function displayStarsTonight(stars) {
                     </span>
                 </div>
 
-                <span class="object-status">
-                    ${star.status}
-                </span>
+                <div class="object-row-action">
+                    <span class="object-status">
+                        ${star.status}
+                    </span>
+
+                    <span class="view-sky-map">
+                        View on Sky Map
+                    </span>
+                </div>
             </div>
         `;
     }
 
     starList.innerHTML = html;
+    setupExploreRowClicks();
 }
 
 
@@ -1059,7 +1093,7 @@ function displayDeepSkyTonight(objects) {
             Math.round(object.maxAltitude);
 
         html += `
-            <div class="object-row">
+            <div class="object-row" data-object-name="${object.name}" data-object-type="Deep Sky">
                 <div>
                     <span class="object-name">
                         ${object.name}
@@ -1072,14 +1106,21 @@ function displayDeepSkyTonight(objects) {
                     </span>
                 </div>
 
-                <span class="object-status">
-                    ${object.status}
-                </span>
+                <div class="object-row-action">
+                    <span class="object-status">
+                        ${object.status}
+                    </span>
+
+                    <span class="view-sky-map">
+                        View on Sky Map
+                    </span>
+                </div>
             </div>
         `;
     }
 
     deepSkyList.innerHTML = html;
+    setupExploreRowClicks();
 }
 
 function getDeepSkyTypeName(type) {
