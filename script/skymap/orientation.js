@@ -176,24 +176,12 @@ function handleDeviceOrientation(event) {
         return;
     }
 
-    if (event.beta == null) {
+    if (event.beta == null || event.alpha == null) {
         return;
     }
 
-    let heading = null;
-
-    if (
-        typeof event.webkitCompassHeading === "number"
-    ) {
-        heading = event.webkitCompassHeading;
-    }
-    else if (event.alpha != null) {
-        heading = (360 - event.alpha) % 360;
-    }
-
-    if (heading == null) {
-        return;
-    }
+    let heading =
+        (360 - event.alpha) % 360;
 
     let altitude =
         event.beta - 90;
