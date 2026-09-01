@@ -51,32 +51,35 @@ function quaternionFromDeviceOrientation(
     gamma,
     screenAngle
 ) {
-    const qAlpha =
-        quaternionFromAxisAngle(
-            { x: 0, y: 1, z: 0 },
-            alpha
-        );
+    const x = beta;
+    const y = alpha;
+    const z = -gamma;
 
-    const qBeta =
-        quaternionFromAxisAngle(
-            { x: 1, y: 0, z: 0 },
-            beta
-        );
+    const c1 = Math.cos(x / 2);
+    const c2 = Math.cos(y / 2);
+    const c3 = Math.cos(z / 2);
 
-    const qGamma =
-        quaternionFromAxisAngle(
-            { x: 0, y: 0, z: 1 },
-            -gamma
-        );
+    const s1 = Math.sin(x / 2);
+    const s2 = Math.sin(y / 2);
+    const s3 = Math.sin(z / 2);
 
-    let q =
-        multiplyQuaternions(
-            qAlpha,
-            multiplyQuaternions(
-                qBeta,
-                qGamma
-            )
-        );
+    let q = {
+        x:
+            s1 * c2 * c3 +
+            c1 * s2 * s3,
+
+        y:
+            c1 * s2 * c3 -
+            s1 * c2 * s3,
+
+        z:
+            c1 * c2 * s3 -
+            s1 * s2 * c3,
+
+        w:
+            c1 * c2 * c3 +
+            s1 * s2 * s3
+    };
 
     const cameraCorrection =
         quaternionFromAxisAngle(
