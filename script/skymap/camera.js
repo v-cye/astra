@@ -154,7 +154,7 @@ function updateSkyDirection() {
 
     let azimuth =
         Math.atan2(
-            -cameraForward.x,
+            cameraForward.x,
             cameraForward.z
         ) * 180 / Math.PI;
 
