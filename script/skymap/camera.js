@@ -172,3 +172,41 @@ function updateSkyDirection() {
             `Looking ${direction} · ${Math.abs(Math.round(altitude))}° Below horizon`;
     }
 }
+
+
+function pointCameraAtHorizon(altitude, azimuth) {
+    const altRad = altitude * Math.PI / 180;
+    const azRad = azimuth * Math.PI / 180;
+
+    cameraForward = normalize({
+        x: Math.cos(altRad) * Math.sin(azRad),
+        y: Math.sin(altRad),
+        z: Math.cos(altRad) * Math.cos(azRad)
+    });
+
+    const worldUp = {
+        x: 0,
+        y: 1,
+        z: 0
+    };
+
+    let right = cross(cameraForward, worldUp);
+
+    if (
+        Math.abs(right.x) < 0.0001 &&
+        Math.abs(right.y) < 0.0001 &&
+        Math.abs(right.z) < 0.0001
+    ) {
+        right = {
+            x: 1,
+            y: 0,
+            z: 0
+        };
+    }
+
+    right = normalize(right);
+
+    cameraUp = normalize(cross(right, cameraForward));
+
+    updateSkyDirection();
+}

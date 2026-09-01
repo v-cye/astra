@@ -83,15 +83,38 @@
     display: flex;
     flex-direction: column;
     gap: 5px;
+
+    cursor: pointer;
+}
+
+.highlight-card:active {
+    transform: scale(0.98);
 }
 
 
-.object-image-placeholder {
+.object-visual {
     width: 100%;
     height: 90px;
 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
     border-radius: 10px;
     background: #111925;
+    font-size: 34px;
+}
+
+.planet-visual {
+    font-size: 38px;
+}
+
+.star-visual {
+    font-size: 34px;
+}
+
+.deep-sky-visual {
+    font-size: 32px;
 }
 
 .highlight-details {

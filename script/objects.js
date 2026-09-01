@@ -319,9 +319,9 @@ function updateTonightHighlights() {
         const altitude = Math.round(object.maxAltitude);
 
         html += `
-            <div class="highlight-card">
+            <div class="highlight-card" data-object-name="${object.name}" data-object-type="${object.type}">
 
-                <div class="object-image-placeholder"></div>
+                <div class="object-visual ${getObjectVisualClass(object)}">${getObjectVisualSymbol(object)}</div>
 
                 <span class="object-name">
                     ${object.name}
@@ -342,8 +342,145 @@ function updateTonightHighlights() {
     }
 
     highlightGrid.innerHTML = html;
+    setupHighlightCardClicks();
 }
 
+function setupHighlightCardClicks() {
+    document.querySelectorAll(".highlight-card").forEach(card => {
+        card.addEventListener("click", () => {
+            const name = card.dataset.objectName;
+            const type = card.dataset.objectType;
+
+            openObjectOnSkyMap(name, type);
+        });
+    });
+}
+
+function openObjectOnSkyMap(name, type) {
+    if (
+        astraData.latitude == null ||
+        astraData.longitude == null
+    ) {
+        return;
+    }
+
+    let object = null;
+
+    if (type === "Planet") {
+        object = tonightPlanets.find(item => item.name === name);
+    }
+
+    if (type === "Star") {
+        object = tonightStars.find(item => item.name === name);
+    }
+
+    if (type === "Deep Sky") {
+        object = tonightDeepSky.find(item => item.name === name);
+    }
+
+    if (!object) {
+        return;
+    }
+
+    const observer = new Astronomy.Observer(
+        astraData.latitude,
+        astraData.longitude,
+        0
+    );
+
+    const now = new Date();
+
+    let ra = null;
+    let dec = null;
+
+    if (type === "Planet") {
+        const equator = Astronomy.Equator(
+            object.name,
+            now,
+            observer,
+            true,
+            true
+        );
+
+        ra = equator.ra;
+        dec = equator.dec;
+    }
+
+    if (type === "Star") {
+        const catalogStar = starByHip.get(Number(object.hip));
+
+        if (!catalogStar) {
+            return;
+        }
+
+        ra = catalogStar.ra;
+        dec = catalogStar.dec;
+    }
+
+    if (type === "Deep Sky") {
+        ra = object.ra;
+        dec = object.dec;
+    }
+
+    if (ra == null || dec == null) {
+        return;
+    }
+
+    const horizon = Astronomy.Horizon(
+        now,
+        observer,
+        ra,
+        dec,
+        "normal"
+    );
+
+    pointCameraAtHorizon(horizon.altitude, horizon.azimuth);
+
+    openSkyMapPage();
+}
+
+function openSkyMapPage() {
+    document.querySelectorAll(".page").forEach(page => {
+        page.classList.remove("active");
+    });
+
+    const skyMapPage = document.getElementById("skyMapPage");
+
+    if (skyMapPage) {
+        skyMapPage.classList.add("active");
+    }
+    
+    document.querySelectorAll(".nav-item").forEach(button => {
+        button.classList.remove("active");
+    });
+
+    const skyMapNav = document.querySelector('.nav-item[onclick*="skyMapPage"]');
+
+    if (skyMapNav) {
+        skyMapNav.classList.add("active");
+    }
+
+    requestAnimationFrame(() => {
+        resizeSkyCanvas();
+        drawSky();
+    });
+}
+
+function getObjectVisualClass(object) {
+    if (object.type === "Planet") return "planet-visual";
+    if (object.type === "Star") return "star-visual";
+    if (object.type === "Deep Sky") return "deep-sky-visual";
+    
+    return "default-visual";
+}
+
+function getObjectVisualSymbol(object) {
+    if (object.type === "Planet") return "◉";
+    if (object.type === "Star") return "★";
+    if (object.type === "Deep Sky") return "◇";
+
+    return "•";
+}
 
 function isHighlightCandidate(object) {
     return (
@@ -776,6 +913,9 @@ function evaluateDeepSkyObject(object, observer, darkness) {
 
         type: "Deep Sky",
         objectType: object.type,
+
+        ra: ra,
+        dec: dec,
 
         constellation: object.constellation,
 
