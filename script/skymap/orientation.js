@@ -1,7 +1,6 @@
 let motionModeEnabled = false;
 
 let smoothedForward = null;
-let smoothedUp = null;
 
 
 function multiplyQuaternions(a, b) {
@@ -220,54 +219,100 @@ function handleDeviceOrientation(event) {
             quaternion
         );
 
-    const targetUp =
-        rotateVectorByQuaternion(
-            {
-                x: 0,
-                y: 1,
-                z: 0
-            },
-            quaternion
-        );
-
     smoothedForward =
         smoothOrientationVector(
             smoothedForward,
             targetForward
         );
 
-    smoothedUp =
-        smoothOrientationVector(
-            smoothedUp,
-            targetUp
-        );
-
     cameraForward =
         normalize(smoothedForward);
+        
+    const worldUp = {
+        x: 0,
+        y: 1,
+        z: 0
+    };
 
-    let right =
+    let levelRight =
         cross(
             cameraForward,
-            smoothedUp
+            worldUp
         );
 
-    const rightLength =
+    const levelRightLength =
         Math.sqrt(
-            right.x * right.x +
-            right.y * right.y +
-            right.z * right.z
+            levelRight.x * levelRight.x +
+            levelRight.y * levelRight.y +
+            levelRight.z * levelRight.z
         );
 
-    if (rightLength > 0.0001) {
-        right = normalize(right);
+    let previousRight =
+        cross(
+            cameraForward,
+            cameraUp
+        );
 
-        cameraUp =
-            normalize(
-                cross(
-                    right,
-                    cameraForward
-                )
+    const previousRightLength =
+        Math.sqrt(
+            previousRight.x * previousRight.x +
+            previousRight.y * previousRight.y +
+            previousRight.z * previousRight.z
+        );
+
+
+    if (previousRightLength > 0.0001) {
+        previousRight =
+            normalize(previousRight);
+    }
+
+
+    let right;
+
+    if (levelRightLength > 0.15) {
+        levelRight =
+            normalize(levelRight);
+
+        const levelAmount =
+            Math.min(
+                1,
+                levelRightLength / 0.35
             );
+
+        right =
+            normalize({
+                x:
+                    previousRight.x * (1 - levelAmount) +
+                    levelRight.x * levelAmount,
+
+                y:
+                    previousRight.y * (1 - levelAmount) +
+                    levelRight.y * levelAmount,
+
+                z:
+                    previousRight.z * (1 - levelAmount) +
+                    levelRight.z * levelAmount
+            });
+
+    } else if (previousRightLength > 0.0001) {
+        right = previousRight;
+    } else {
+        return;
+    }
+
+    const newUp = cross(
+        right,
+        cameraForward
+    );
+
+    const newUpLength = Math.sqrt(
+        newUp.x * newUp.x +
+        newUp.y * newUp.y +
+        newUp.z * newUp.z
+    );
+
+    if (newUpLength > 0.0001) {
+        cameraUp = normalize(newUp);
     }
 
     requestSkyRedraw();
@@ -311,7 +356,6 @@ async function enableMotionMode() {
     motionModeEnabled = true;
 
     smoothedForward = null;
-    smoothedUp = null;
 
     window.addEventListener(
         "deviceorientation",
@@ -333,7 +377,6 @@ function disableMotionMode() {
     );
 
     smoothedForward = null;
-    smoothedUp = null;
 
     updateMotionButton();
 }
