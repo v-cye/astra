@@ -1,3 +1,5 @@
+let lastStableViewAzimuth = 0;
+
 function dot(a, b) {
     return (
         a.x * b.x +
@@ -78,11 +80,27 @@ function horizonToCanvas(altitude, azimuth) {
     const viewAltitude =
         Math.asin(forward.y);
 
-    const viewAzimuth =
-        Math.atan2(
-            forward.x,
-            forward.z
+    const horizontalLength =
+        Math.sqrt(
+            forward.x * forward.x +
+            forward.z * forward.z
         );
+
+    let viewAzimuth;
+
+    if (horizontalLength > 0.08) {
+        viewAzimuth =
+            Math.atan2(
+                forward.x,
+                forward.z
+            );
+
+        lastStableViewAzimuth =
+            viewAzimuth;
+    } else {
+        viewAzimuth =
+            lastStableViewAzimuth;
+    }
 
     const right = {
         x: Math.cos(viewAzimuth),
