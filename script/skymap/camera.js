@@ -75,44 +75,33 @@ function horizonToCanvas(altitude, azimuth) {
     const forward =
         normalize(cameraForward);
 
-    const worldUp = {
-        x: 0,
-        y: 1,
-        z: 0
+    const viewAltitude =
+        Math.asin(forward.y);
+
+    const viewAzimuth =
+        Math.atan2(
+            forward.x,
+            forward.z
+        );
+
+    const right = {
+        x: Math.cos(viewAzimuth),
+        y: 0,
+        z: -Math.sin(viewAzimuth)
     };
 
-    /*
-        Rebuild a LEVEL camera basis.
+    const up = {
+        x:
+            -Math.sin(viewAltitude) *
+            Math.sin(viewAzimuth),
 
-        This prevents cameraUp from accidentally
-        mirroring/rotating the sky.
-    */
-    let right =
-        cross(worldUp, forward);
+        y:
+            Math.cos(viewAltitude),
 
-    const rightLength =
-        Math.sqrt(
-            right.x * right.x +
-            right.y * right.y +
-            right.z * right.z
-        );
-
-    /*
-        Only use the existing cameraUp
-        extremely close to zenith/nadir.
-    */
-    if (rightLength < 0.0001) {
-        right =
-            cross(cameraUp, forward);
-    }
-
-    right =
-        normalize(right);
-
-    const up =
-        normalize(
-            cross(forward, right)
-        );
+        z:
+            -Math.sin(viewAltitude) *
+            Math.cos(viewAzimuth)
+    };
 
     const cameraX =
         dot(objectVector, right);
