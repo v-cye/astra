@@ -173,7 +173,7 @@ function calculateHourlyScores() {
     } else {
         document.getElementById("bestWindow").textContent = "No good window tonight";
 
-        document.getElementById("bestWindowScore").textContent = "--";
+        document.getElementById("bestWindowScore").textContent = "Conditions remain unfavorable throughout the night.";
     }
 }
 
