@@ -107,7 +107,7 @@ function horizonToCanvas(altitude, azimuth) {
         );
 
     const x =
-        skyCanvas.width / 2 +
+        skyCanvas.width / 2 -
         (cameraX / cameraZ) *
         focalLength;
 
