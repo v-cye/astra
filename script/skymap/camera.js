@@ -79,7 +79,7 @@ function horizonToCanvas(altitude, azimuth) {
         normalize(cameraUp);
 
     const right =
-        normalize(cross(forward, up));
+        normalize(cross(up, forward));
 
     const cameraX =
         dot(objectVector, right);
