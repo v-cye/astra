@@ -154,7 +154,7 @@ function updateSkyDirection() {
 
     let azimuth =
         Math.atan2(
-            cameraForward.x,
+            -cameraForward.x,
             cameraForward.z
         ) * 180 / Math.PI;
 
@@ -190,7 +190,7 @@ function pointCameraAtHorizon(altitude, azimuth) {
         z: 0
     };
 
-    let right = cross(cameraForward, worldUp);
+    let right = cross(worldUp, cameraForward);
 
     if (
         Math.abs(right.x) < 0.0001 &&
@@ -206,7 +206,7 @@ function pointCameraAtHorizon(altitude, azimuth) {
 
     right = normalize(right);
 
-    cameraUp = normalize(cross(right, cameraForward));
+    cameraUp = normalize(cross(cameraForward, right));
 
     updateSkyDirection();
 }
