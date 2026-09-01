@@ -38,8 +38,7 @@
 }
 
 .conditions-score-card {
-    margin-top: 20px;
-    padding: 22px;
+    padding: 18px;
     background: #0b1119;
     border: 1px solid #202a36;
     border-radius: 14px;
@@ -50,13 +49,57 @@
 
 .conditions-score {
     margin-top: 12px;
+
+    color: #ffffff;
     font-size: 42px;
+    font-weight: 400;
 }
 
 .score-label {
-    margin-top: 4px;
+    margin-top: 5px;
+
     color: #8fd45f;
-    font-size: 13px;
+    font-size: 12px;
+}
+
+.conditions-explanation {
+    margin: 14px 0 0;
+
+    color: #7f8792;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.best-window-card {
+    display: flex;
+    flex-direction: column;
+
+    margin-top: 12px;
+    padding: 16px 18px;
+
+    border: 1px solid #202a36;
+    border-radius: 14px;
+
+    background: #080d14;
+}
+
+.best-window-time {
+    margin-top: 8px;
+
+    color: #ffffff;
+    font-size: 19px;
+}
+
+.best-window-quality {
+    margin-top: 7px;
+
+    color: #8fa0b5;
+    font-size: 11px;
+}
+
+.best-window-quality strong {
+    color: #ffffff;
+    font-weight: 400;
 }
 
 .section-title {

@@ -88,8 +88,9 @@ function updateObservingQuality() {
 
         const label = getObservingLabel(score);
 
-        document.getElementById("conditionsScoreLabel").textContent = label;
+        document.getElementById("conditionsExplanation").textContent = getObservingExplanation(weather, astronomy);
 
+        document.getElementById("conditionsScoreLabel").textContent = label;
 
         document.getElementById("conditionsCloud").textContent =
             weather.cloud_cover + "%";
@@ -160,6 +161,8 @@ function calculateHourlyScores() {
     const bestWindow = findBestObservingWindow(nighttimeScores);
 
     if(bestWindow) {
+        astraData.bestWindow = bestWindow;
+
         const startTime = formatTime(bestWindow.start);
         const endTime = formatTime(bestWindow.end);
 
@@ -218,3 +221,31 @@ window.addEventListener("load", () => {
     getLocation();
 });
 
+
+function getObservingExplanation(weather, astronomy) {
+    const problems = [];
+
+    if (weather.cloud_cover >= 70) {
+        problems.push("Heavy cloud cover will make observing difficult.");
+    } else if (weather.cloud_cover >= 40) {
+        problems.push("Cloud cover may interrupt observing.");
+    }
+
+    if (astronomy.moon_illumination >= 75) {
+        problems.push("Bright moonlight may wash out faint deep-sky objects.");
+    }
+
+    if (weather.relative_humidity_2m >= 80) {
+        problems.push("High humidity may reduce sky clarity.");
+    }
+
+    if (weather.wind_speed_10m >= 20) {
+        problems.push("Strong wind may make observing less comfortable.");
+    }
+
+    if (problems.length === 0) {
+        return "Conditions are favorable for observing tonight.";
+    }
+
+    return problems.slice(0, 2).join(" ");
+}
